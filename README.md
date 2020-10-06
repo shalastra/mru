@@ -10,5 +10,5 @@ gup .
 
 You can also provide the specific path to the root folder containing all your git repositories:
 ```
-gup <path?
+gup <path>
 ```
