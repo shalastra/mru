@@ -29,7 +29,7 @@ public class GitUpdate implements Callable<String> {
             paths.filter(Files::isDirectory).forEach(path -> {
                 try {
                     Files.walkFileTree(path, Collections.emptySet(), 1,
-                            new GitRepositorySearch(path));
+                            new DirectoryVisitor(path));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

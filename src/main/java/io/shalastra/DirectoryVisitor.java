@@ -10,16 +10,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class GitRepositorySearch implements FileVisitor<Path> {
+public class DirectoryVisitor implements FileVisitor<Path> {
 
     private final Path basePath;
 
-    GitRepositorySearch(final Path basePath) {
+    DirectoryVisitor(final Path basePath) {
         this.basePath = basePath;
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
         return FileVisitResult.CONTINUE;
     }
 
@@ -46,7 +46,7 @@ public class GitRepositorySearch implements FileVisitor<Path> {
     }
 
     @Override
-    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+    public FileVisitResult visitFileFailed(Path file, IOException exc) {
         return FileVisitResult.CONTINUE;
     }
 
