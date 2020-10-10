@@ -29,8 +29,8 @@ public class DirectoryVisitor implements FileVisitor<Path> {
 
         String absolutePath = basePath.toString();
         if (".git".equals(current)) {
-            System.out.println("Current path is... " + absolutePath);
-
+            System.out.print("Current path is... " + absolutePath);
+//            System.out.print('\r');
             System.out.println("Executing git pull, default master");
             String command = "git pull";
 
@@ -38,8 +38,9 @@ public class DirectoryVisitor implements FileVisitor<Path> {
             builder.directory(new File(basePath.toUri()));
             Process process = builder.start();
             BufferedReader output = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            output.lines().forEach(System.out::println);
+            output.lines().forEach(System.out::print);
 
+            System.out.println();
             return FileVisitResult.TERMINATE;
         }
         return FileVisitResult.CONTINUE;

@@ -42,6 +42,7 @@ public class GitUpdate implements Callable<String> {
             e.printStackTrace();
         }
 
-        return "";
+        int repositoriesCount = 0;
+        return String.format("Update successful, %d updated  repositories.", repositoriesCount);
     }
 }
