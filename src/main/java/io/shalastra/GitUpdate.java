@@ -7,7 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static picocli.CommandLine.*;
@@ -15,7 +17,7 @@ import static picocli.CommandLine.*;
 @Command(name = "gup", mixinStandardHelpOptions = true,
         version = "gup 0.0.1",
         description = "Updates all git repositories (current branch only) in the provided path.")
-public class GitUpdate implements Callable<String> {
+public class GitUpdate implements Callable<Integer> {
 
     @Spec
     private CommandSpec spec;
@@ -24,16 +26,25 @@ public class GitUpdate implements Callable<String> {
     private Path path;
 
     @Override
-    public String call() {
-        try (Stream<Path> paths = Files.list(path)) {
-            paths.filter(Files::isDirectory).forEach(path -> {
-                try {
-                    Files.walkFileTree(path, Collections.emptySet(), 1,
-                            new DirectoryVisitor(path));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+    public Integer call() {
+        try (Stream<Path> pathStream = Files.list(path)) {
+            List<Path> paths = pathStream.collect(Collectors.toList());
+            long count = paths.size();
+
+            System.out.format("> Found %d repositories. Checking for updates...%n", count);
+
+            paths.stream()
+                    .filter(Files::isDirectory)
+                    .forEach(path -> {
+                        try {
+                            Files.walkFileTree(path, Collections.emptySet(), 1,
+                                    new DirectoryVisitor(path));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+
+            System.out.format("%n> Update successful, updated repositories = 12");
         } catch (NoSuchFileException ex) {
             throw new ParameterException(spec.commandLine(),
                     String.format("Invalid value '%s' for path: " +
@@ -42,7 +53,6 @@ public class GitUpdate implements Callable<String> {
             e.printStackTrace();
         }
 
-        int repositoriesCount = 0;
-        return String.format("Update successful, %d updated  repositories.", repositoriesCount);
+        return 0;
     }
 }
