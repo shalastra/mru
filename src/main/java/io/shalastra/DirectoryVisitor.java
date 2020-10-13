@@ -29,14 +29,15 @@ public class DirectoryVisitor implements FileVisitor<Path> {
 
         String absolutePath = basePath.toString();
         if (".git".equals(current)) {
-            System.out.format("> Checking %s... %n", absolutePath);
             String command = "git pull";
 
             ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", command);
             builder.directory(new File(basePath.toUri()));
             Process process = builder.start();
             BufferedReader output = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            output.lines().forEach(System.out::print);
+            output.lines().filter(line -> line.contains("Already up tp date"))
+                    .findAny()
+                    .ifPresentOrElse(s -> System.out.format("changes"), () -> System.out.format("nothing"));
 
             System.out.println();
             return FileVisitResult.TERMINATE;

@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,23 +29,23 @@ public class GitUpdate implements Callable<Integer> {
     @Override
     public Integer call() {
         try (Stream<Path> pathStream = Files.list(path)) {
-            List<Path> paths = pathStream.collect(Collectors.toList());
+            List<Path> paths = pathStream.filter(Files::isDirectory).collect(Collectors.toList());
             long count = paths.size();
 
             System.out.format("> Found %d repositories. Checking for updates...%n", count);
 
-            paths.stream()
-                    .filter(Files::isDirectory)
-                    .forEach(path -> {
-                        try {
-                            Files.walkFileTree(path, Collections.emptySet(), 1,
-                                    new DirectoryVisitor(path));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+            paths.forEach(p -> {
+                try {
+                    System.out.format("> Checking %s for updates... %n", p.subpath(1, p.getNameCount()));
+                    Files.walkFileTree(p, Collections.emptySet(), 1,
+                            new DirectoryVisitor(p));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
 
-            System.out.format("%n> Update successful, updated repositories = 12");
+            System.out.format("%n> Update successful, all repositories in %s are up to date.", path.subpath(0,
+                    path.getNameCount()));
         } catch (NoSuchFileException ex) {
             throw new ParameterException(spec.commandLine(),
                     String.format("Invalid value '%s' for path: " +
