@@ -1,9 +1,6 @@
 package io.shalastra;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -13,6 +10,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DirectoryVisitor implements FileVisitor<Path> {
+
+    private static final String GIT_REPOSITORY = ".git";
 
     private final Path basePath;
 
@@ -29,24 +28,36 @@ public class DirectoryVisitor implements FileVisitor<Path> {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         String current = file.getFileName().toString();
 
-        String absolutePath = basePath.toString();
-        if (".git".equals(current)) {
-            String command = "git pull";
+        if (GIT_REPOSITORY.equals(current)) {
+            System.out.format("> Checking %s for updates", file.subpath(file.getNameCount() - 2,
+                    file.getNameCount() - 1));
 
-            ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", command);
-            builder.directory(new File(basePath.toUri()));
-            Process process = builder.start();
-            BufferedReader output = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String gitOutput = output.lines().collect(Collectors.joining());
-
-            Optional.of(gitOutput)
+            Optional.of(updateRepository())
                     .filter(line -> line.contains("Already up tp date"))
-                    .ifPresentOrElse(s -> System.out.format("------> CHANGES DETECTED%n"),
-                            () -> System.out.format("------> UP-TO-DATE%n"));
+                    .ifPresentOrElse(s -> System.out.format(" ------> CHANGES DETECTED%n"),
+                            () -> System.out.format(" ------> UP-TO-DATE%n"));
 
             return FileVisitResult.TERMINATE;
         }
         return FileVisitResult.CONTINUE;
+    }
+
+    private String updateRepository() throws IOException {
+        BufferedReader output = new BufferedReader(new InputStreamReader(executeCommand()));
+
+        return output.lines().collect(Collectors.joining());
+    }
+
+    private InputStream executeCommand() throws IOException {
+        final String SHELL = "/bin/bash";
+        final String EXECUTABLE = "-c";
+        final String GIT_PULL = "git pull";
+
+        ProcessBuilder builder = new ProcessBuilder(SHELL, EXECUTABLE, GIT_PULL);
+        builder.directory(new File(basePath.toUri()));
+        Process process = builder.start();
+
+        return process.getInputStream();
     }
 
     @Override
