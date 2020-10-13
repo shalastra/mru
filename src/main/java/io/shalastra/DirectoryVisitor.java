@@ -9,6 +9,8 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class DirectoryVisitor implements FileVisitor<Path> {
 
@@ -35,11 +37,13 @@ public class DirectoryVisitor implements FileVisitor<Path> {
             builder.directory(new File(basePath.toUri()));
             Process process = builder.start();
             BufferedReader output = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            output.lines().filter(line -> line.contains("Already up tp date"))
-                    .findAny()
-                    .ifPresentOrElse(s -> System.out.format("changes"), () -> System.out.format("nothing"));
+            String gitOutput = output.lines().collect(Collectors.joining());
 
-            System.out.println();
+            Optional.of(gitOutput)
+                    .filter(line -> line.contains("Already up tp date"))
+                    .ifPresentOrElse(s -> System.out.format("------> CHANGES DETECTED%n"),
+                            () -> System.out.format("------> UP-TO-DATE%n"));
+
             return FileVisitResult.TERMINATE;
         }
         return FileVisitResult.CONTINUE;

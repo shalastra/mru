@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,14 +28,19 @@ public class GitUpdate implements Callable<Integer> {
     @Override
     public Integer call() {
         try (Stream<Path> pathStream = Files.list(path)) {
-            List<Path> paths = pathStream.filter(Files::isDirectory).collect(Collectors.toList());
+            List<Path> paths = pathStream
+                    .filter(Files::isDirectory)
+                    .filter(file -> !file.toAbsolutePath().toString().contains(".vscode"))
+                    .filter(file -> !file.toAbsolutePath().toString().contains(".metals"))
+                    .collect(Collectors.toList());
+
             long count = paths.size();
 
             System.out.format("> Found %d repositories. Checking for updates...%n", count);
 
             paths.forEach(p -> {
                 try {
-                    System.out.format("> Checking %s for updates... %n", p.subpath(1, p.getNameCount()));
+                    System.out.format("> Checking %s for updates...", p.subpath(1, p.getNameCount()));
                     Files.walkFileTree(p, Collections.emptySet(), 1,
                             new DirectoryVisitor(p));
                 } catch (IOException e) {
