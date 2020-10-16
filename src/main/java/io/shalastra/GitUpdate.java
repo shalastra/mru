@@ -5,6 +5,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -15,8 +16,8 @@ import java.util.stream.Stream;
 
 import static picocli.CommandLine.*;
 
-@Command(name = "gup", mixinStandardHelpOptions = true,
-        version = "gup 0.0.1",
+@Command(name = "mru", mixinStandardHelpOptions = true,
+        version = "mru 0.0.2",
         description = "Updates all git repositories (current branch only) in the provided path.")
 public class GitUpdate implements Callable<Integer> {
 
@@ -29,7 +30,7 @@ public class GitUpdate implements Callable<Integer> {
     @Override
     public Integer call() throws IOException {
         Optional.of(collectDirectoryPaths()).ifPresentOrElse(paths -> {
-            System.out.format("> Found %d repositories. Checking for updates...%n", paths.size());
+            System.out.format("> Found %d directories. Checking for git repositories...%n", paths.size());
 
             paths.forEach(this::discoverGitRepositories);
 
@@ -52,6 +53,8 @@ public class GitUpdate implements Callable<Integer> {
         } catch (NoSuchFileException ex) {
             throw new ParameterException(spec.commandLine(),
                     String.format("Invalid value '%s' for path - value is not a path.", path.toString()));
+        } catch (NotDirectoryException ex) {
+            throw new ParameterException(spec.commandLine(), "You have to provide a directory.");
         }
 
         return paths;

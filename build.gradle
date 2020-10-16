@@ -30,7 +30,7 @@ compileJava {
 
 graal {
     mainClass 'io.shalastra.MainApplication'
-    outputName 'gup'
+    outputName 'mru'
     javaVersion '11'
 }
 
