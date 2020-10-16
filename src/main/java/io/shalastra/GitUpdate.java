@@ -28,21 +28,14 @@ public class GitUpdate implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        List<Path> paths = Optional.of(collectDirectoryPaths()).orElse(Collections.emptyList());
+        Optional.of(collectDirectoryPaths()).ifPresentOrElse(paths -> {
+            System.out.format("> Found %d repositories. Checking for updates...%n", paths.size());
 
-        System.out.format("> Found %d repositories. Checking for updates...%n", paths.size());
+            paths.forEach(this::discoverGitRepositories);
 
-        paths.forEach(p -> {
-            try {
-                Files.walkFileTree(p, Collections.emptySet(), 1,
-                        new DirectoryVisitor(p));
-            } catch (IOException e) {
-                throw new ParameterException(spec.commandLine(), String.format("%s", e.getLocalizedMessage()));
-            }
-        });
-
-        System.out.format("%n> Update successful, all repositories in %s are up to date.", path.subpath(0,
-                path.getNameCount()));
+            System.out.format("%n> Update successful, all repositories in %s are up to date.", path.subpath(0,
+                    path.getNameCount()));
+        }, () -> System.out.format("No directories in the provided path."));
 
         return 0;
     }
@@ -62,5 +55,14 @@ public class GitUpdate implements Callable<Integer> {
         }
 
         return paths;
+    }
+
+    private void discoverGitRepositories(Path p) {
+        try {
+            Files.walkFileTree(p, Collections.emptySet(), 1,
+                    new DirectoryVisitor(p));
+        } catch (IOException e) {
+            throw new ParameterException(spec.commandLine(), String.format("%s", e.getLocalizedMessage()));
+        }
     }
 }
