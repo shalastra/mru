@@ -1,4 +1,5 @@
 # MRU
+### M(ultiple) R(epositories) U(pdater)
 Simple command line application for updating all git repositories in a provided directory.
 
 ## Usage
