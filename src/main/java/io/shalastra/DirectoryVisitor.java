@@ -1,5 +1,7 @@
 package io.shalastra;
 
+import com.diogonunes.jcolor.Attribute;
+
 import java.io.*;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -8,6 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.diogonunes.jcolor.Ansi.colorize;
 
 public class DirectoryVisitor implements FileVisitor<Path> {
 
@@ -33,9 +37,18 @@ public class DirectoryVisitor implements FileVisitor<Path> {
                     file.getNameCount() - 1));
 
             Optional.of(updateRepository())
-                    .filter(line -> line.contains("Already up tp date"))
-                    .ifPresentOrElse(s -> System.out.format(" ------> CHANGES DETECTED%n"),
-                            () -> System.out.format(" ------> UP-TO-DATE%n"));
+                    .filter(line -> !line.contains("Already up to date"))
+                    .ifPresentOrElse(s -> {
+                                System.out.format(" ------> ");
+                                System.out.format(colorize("CHANGES DETECTED", Attribute.BOLD(),
+                                        Attribute.YELLOW_TEXT()));
+                                System.out.format("%n");
+                            },
+                            () -> {
+                                System.out.format(" ------> ");
+                                System.out.format(colorize("UP-TO-DATE", Attribute.BOLD(), Attribute.GREEN_TEXT()));
+                                System.out.format("%n");
+                            });
 
             return FileVisitResult.TERMINATE;
         }
