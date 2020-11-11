@@ -3,13 +3,17 @@ plugins {
     id 'java'
     id 'idea'
     id "com.palantir.graal" version "0.7.1-20-g113a84d"
+    id 'com.palantir.git-version' version '0.12.3'
+    id "nebula.ospackage" version "8.4.1"
 }
 
 group 'io.shalastra'
-version '0.0.1'
+version gitVersion()
 sourceCompatibility = '11'
 
 apply plugin : "java"
+apply plugin: 'nebula.deb'
+
 ext {
     javaMainClass = "io.shalastra.MainApplication"
 }
@@ -32,6 +36,11 @@ graal {
     mainClass 'io.shalastra.MainApplication'
     outputName 'mru'
     javaVersion '11'
+    option '-H:ResourceConfigurationFiles=' + project.file('resource-config.json').absolutePath
+}
+
+processResources {
+    expand project.properties
 }
 
 dependencies {
@@ -50,3 +59,4 @@ test {
         events "passed", "skipped", "failed"
     }
 }
+

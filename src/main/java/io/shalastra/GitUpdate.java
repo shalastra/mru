@@ -14,12 +14,15 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.shalastra.GitUpdate.version;
 import static picocli.CommandLine.*;
 
 @Command(name = "mru", mixinStandardHelpOptions = true,
-        version = "mru 0.0.2",
+        version = version,
         description = "Updates all git repositories (current branch only) in the provided path.")
 public class GitUpdate implements Callable<Integer> {
+
+    public final static String version = "0.0.2.1";
 
     @Spec
     private CommandSpec spec;

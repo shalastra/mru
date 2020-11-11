@@ -23,6 +23,19 @@ public class DirectoryVisitor implements FileVisitor<Path> {
         this.basePath = basePath;
     }
 
+    private static void printChangesMessage(String s) {
+        System.out.format(" ------> ");
+        System.out.format(colorize("CHANGES DETECTED", Attribute.BOLD(),
+                Attribute.YELLOW_TEXT()));
+        System.out.format("%n");
+    }
+
+    private static void printUpToDateMessage() {
+        System.out.format(" ------> ");
+        System.out.format(colorize("UP-TO-DATE", Attribute.BOLD(), Attribute.GREEN_TEXT()));
+        System.out.format("%n");
+    }
+
     @Override
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
         return FileVisitResult.CONTINUE;
@@ -33,26 +46,21 @@ public class DirectoryVisitor implements FileVisitor<Path> {
         String current = file.getFileName().toString();
 
         if (GIT_REPOSITORY.equals(current)) {
-            System.out.format("> Checking %s for updates", file.subpath(file.getNameCount() - 2,
-                    file.getNameCount() - 1));
+            System.out.format("> Checking %s for updates", getDirectoryName(file));
 
             Optional.of(updateRepository())
                     .filter(line -> !line.contains("Already up to date"))
-                    .ifPresentOrElse(s -> {
-                                System.out.format(" ------> ");
-                                System.out.format(colorize("CHANGES DETECTED", Attribute.BOLD(),
-                                        Attribute.YELLOW_TEXT()));
-                                System.out.format("%n");
-                            },
-                            () -> {
-                                System.out.format(" ------> ");
-                                System.out.format(colorize("UP-TO-DATE", Attribute.BOLD(), Attribute.GREEN_TEXT()));
-                                System.out.format("%n");
-                            });
+                    .ifPresentOrElse(DirectoryVisitor::printChangesMessage,
+                            DirectoryVisitor::printUpToDateMessage);
 
             return FileVisitResult.TERMINATE;
         }
         return FileVisitResult.CONTINUE;
+    }
+
+    private Path getDirectoryName(Path file) {
+        return file.subpath(file.getNameCount() - 2,
+                file.getNameCount() - 1);
     }
 
     private String updateRepository() throws IOException {
