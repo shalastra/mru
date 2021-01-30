@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,26 +33,28 @@ public class GitUpdate implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        Optional.of(collectDirectoryPaths()).ifPresentOrElse(paths -> {
+        Optional.of(collectDirectoryPaths())
+                .ifPresentOrElse(getListConsumer(),
+                        () -> System.out.format("No directories in the provided path."));
+
+        return 0;
+    }
+
+    private Consumer<List<Path>> getListConsumer() {
+        return paths -> {
             System.out.format("> Found %d directories. Checking for git repositories...%n", paths.size());
 
             paths.forEach(this::discoverGitRepositories);
 
             System.out.format("%n> Update successful, all repositories in %s are up to date.", path.subpath(0,
                     path.getNameCount()));
-        }, () -> System.out.format("No directories in the provided path."));
-
-        return 0;
+        };
     }
 
     private List<Path> collectDirectoryPaths() throws IOException {
         List<Path> paths;
         try (Stream<Path> pathStream = Files.list(path)) {
-            paths = pathStream
-                    .filter(Files::isDirectory)
-                    .filter(file -> !file.toAbsolutePath().toString().contains(".vscode"))
-                    .filter(file -> !file.toAbsolutePath().toString().contains(".metals"))
-                    .collect(Collectors.toList());
+            paths = getPaths(pathStream);
 
         } catch (NoSuchFileException ex) {
             throw new ParameterException(spec.commandLine(),
@@ -59,6 +62,17 @@ public class GitUpdate implements Callable<Integer> {
         } catch (NotDirectoryException ex) {
             throw new ParameterException(spec.commandLine(), "You have to provide a directory.");
         }
+
+        return paths;
+    }
+
+    private List<Path> getPaths(Stream<Path> pathStream) {
+        List<Path> paths;
+        paths = pathStream
+                .filter(Files::isDirectory)
+                .filter(file -> !file.toAbsolutePath().toString().contains(".vscode"))
+                .filter(file -> !file.toAbsolutePath().toString().contains(".metals"))
+                .collect(Collectors.toList());
 
         return paths;
     }

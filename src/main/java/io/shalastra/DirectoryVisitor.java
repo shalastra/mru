@@ -46,16 +46,20 @@ public class DirectoryVisitor implements FileVisitor<Path> {
         String current = file.getFileName().toString();
 
         if (GIT_REPOSITORY.equals(current)) {
-            System.out.format("> Checking %s for updates", getDirectoryName(file));
-
-            Optional.of(updateRepository())
-                    .filter(line -> !line.contains("Already up to date"))
-                    .ifPresentOrElse(DirectoryVisitor::printChangesMessage,
-                            DirectoryVisitor::printUpToDateMessage);
-
-            return FileVisitResult.TERMINATE;
+            return getFileVisitResult(file);
         }
         return FileVisitResult.CONTINUE;
+    }
+
+    private FileVisitResult getFileVisitResult(Path file) throws IOException {
+        System.out.format("> Checking %s for updates", getDirectoryName(file));
+
+        Optional.of(updateRepository())
+                .filter(line -> !line.contains("Already up to date"))
+                .ifPresentOrElse(DirectoryVisitor::printChangesMessage,
+                        DirectoryVisitor::printUpToDateMessage);
+
+        return FileVisitResult.TERMINATE;
     }
 
     private Path getDirectoryName(Path file) {
