@@ -60,3 +60,9 @@ test {
     }
 }
 
+task localDeploy {
+    doLast {
+        workingDir '.'
+        commandLine 'cp', 'build/graal/mru', '/usr/local/bin/'
+    }
+}
